@@ -8,6 +8,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Gestures and Animations',
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -24,18 +25,46 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage>
+    with SingleTickerProviderStateMixin {
+  Animation<double> animation;
+  AnimationController controller;
+
   int numTaps = 0;
   int numDoubleTaps = 0;
   int numLongPress = 0;
 
   double posX = 0.0;
   double posY = 0.0;
-  double boxSize = 150.0;
+
+  double boxSize = 0.0;
+  final double fullBoxSize = 150.0;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = AnimationController(
+      vsync: this,
+      duration: const Duration(microseconds: 5000),
+    );
+    animation = CurvedAnimation(
+      parent: controller,
+      curve: Curves.easeInOut,
+    );
+    animation.addListener(
+      () {
+        setState(() {
+          boxSize = fullBoxSize * animation.value;
+        });
+        center(context);
+      },
+    );
+    controller.forward();
+  }
 
   @override
   Widget build(BuildContext context) {
-    if(posX == 0.0){
+    if (posX == 0.0) {
       center(context);
     }
     return Scaffold(
@@ -43,31 +72,31 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text("Geastures and Animation"),
       ),
       body: GestureDetector(
-        onTap: (){
+        onTap: () {
           setState(() {
             numTaps += 1;
           });
         },
-        onDoubleTap: (){
+        onDoubleTap: () {
           setState(() {
             numDoubleTaps += 1;
           });
         },
-        onLongPress: (){
+        onLongPress: () {
           setState(() {
             numLongPress += 1;
           });
         },
-        onVerticalDragUpdate: (DragUpdateDetails value){
+        onVerticalDragUpdate: (DragUpdateDetails value) {
           setState(() {
             double delta = value.delta.dy;
             posY += delta;
           });
         },
-        onHorizontalDragUpdate: (DragUpdateDetails value){
+        onHorizontalDragUpdate: (DragUpdateDetails value) {
           setState(() {
             double delta = value.delta.dx;
-            posX +=delta;
+            posX += delta;
           });
         },
         child: Stack(
@@ -94,6 +123,12 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
   }
 
   void center(BuildContext context) {
